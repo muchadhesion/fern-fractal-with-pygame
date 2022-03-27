@@ -3,37 +3,47 @@ import operator
 import pygame
 import pygame as pg
 import math
+import random
 
 WIDTH=640
-HEIGHT=400
+HEIGHT=800
 
 SEG_LEN=100
-SEG_GROWTH=0.85
-SEG_LEAN=20
-SPROUT_DEG=-70
-SPROUT_GROWTH=0.5
+SEG_GROWTH=0.80
+SEG_LEAN=0
 
-MAX_DEPTH=10
-MAX_SEGS=10
+SPROUT_DEG=-50
+SPROUT_GROWTH=0.6
+
+SPROUT2_DEG=70
+SPROUT2_GROWTH=0.4
+
+MAX_DEPTH=16
+MAX_SEGS=20
 
 frame = 0
+game_time_ms = 0
 
 def grow(screen, start, angle_deg, len, depth=1, segment=1, sprout=False):
     a = math.radians(angle_deg )
     delta = (len * math.cos(a), len * math.sin(a) )
     end = tuple( map( operator.add, start, delta ) )
     pg.draw.line(screen, pg.Color('blue'), start, end, 2)
-    waft = 2 * math.sin( frame / 500)
+    t = game_time_ms / 1000
+    waft_extra = random.random() * 0
+    waft = 10 * math.sin( t * 0.5 ) + math.sin( waft_extra)
     if len < 4:
         return
     if depth <= MAX_DEPTH:
         if sprout:
             grow(screen, end, angle_deg+SPROUT_DEG+waft, len*SPROUT_GROWTH, depth=depth+1, segment=segment, sprout=True)
+            grow(screen, end, angle_deg+SPROUT2_DEG+waft, len*SPROUT2_GROWTH, depth=depth+1, segment=segment, sprout=True)
     if segment <= MAX_SEGS:
         grow(screen, end, angle_deg+SEG_LEAN+waft, len*SEG_GROWTH, depth, segment=segment+1, sprout=True)
 
 def update(screen):
     global frame
+    
     start = (WIDTH/2, HEIGHT)
     a = -90
 
@@ -45,7 +55,12 @@ def main():
 
     screen = pygame.display.set_mode((WIDTH,HEIGHT))
     running = True
+    clock = pygame.time.Clock()
+
+    global game_time_ms
     while running:
+        ms = clock.tick(60)
+        game_time_ms += ms
         screen.fill((0,0,10))
         update(screen)
         pygame.display.flip()
